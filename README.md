@@ -271,8 +271,8 @@ proyecto-19-sis313/
 | :---: | :--- | :--- | :--- | :---: |
 | 18 | **Estado inicial RAID** | `sudo mdadm --detail /dev/md5` en VM-DB2 | `State: clean`, `Active Devices: 3` | OK |
 | 19 | **Fallo de disco simulado** | `sudo mdadm --manage /dev/md5 --fail /dev/sdb` | `State: clean, degraded` — MariaDB sigue activa | OK |
-| 20 | **Datos accesibles tras fallo** | `SELECT COUNT(*) FROM chat_db.messages` en VM-DB2 | Responde correctamente (RAID degradado pero funcional) | [Pendiente] |
-| 21 | **Reconstrucción RAID** | `sudo mdadm --manage /dev/md5 --add /dev/sde` + `watch cat /proc/mdstat` | `State: clean` tras reconstrucción completa | [Pendiente] |
+| 20 | **Datos accesibles tras fallo** | `SELECT COUNT(*) FROM chat_db.messages` en VM-DB2 | Responde correctamente (RAID degradado pero funcional) | OK |
+| 21 | **Reconstrucción RAID** | `sudo mdadm --manage /dev/md5 --add /dev/sde` + `watch cat /proc/mdstat` | `State: clean` tras reconstrucción completa | OK |
 
 
 ### 6.6. Pruebas de Seguridad y Fail2ban
