@@ -14,8 +14,8 @@
 | :--- | :--- | :--- |
 | Alvaro David Arancibia Estrada | Arquitecto de Infraestructura — VM-Proxy, VM-Proxy2, NGINX HA, TLS, Fail2ban, Grafana | logicat1204 |
 | Pedro Jhoel Antonio Magne Ordoñez | Ingeniero de Aplicaciones — VM-App1, Node.js, PM2, Keepalived MASTER | Zetastico |
-| Laura Luciana Diaz Campos | Ingeniero de Aplicaciones — VM-App2, Node.js, PM2, Keepalived BACKUP | [Usuario de GitHub] |
-| Gabriel Orlando Cornejo Moscoso | Administrador de Base de Datos — VM-DB, VM-DB2, Replicación, RAID 5, Backups | [Usuario de GitHub] |
+| Laura Luciana Diaz Campos | Ingeniero de Aplicaciones — VM-App2, Node.js, PM2, Keepalived BACKUP | luladc |
+| Gabriel Orlando Cornejo Moscoso | Administrador de Base de Datos — VM-DB, VM-DB2, Replicación, RAID 5, Backups | Gabrielo1212 |
 
 ---
 
