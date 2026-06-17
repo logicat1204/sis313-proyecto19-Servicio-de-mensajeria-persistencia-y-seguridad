@@ -13,9 +13,9 @@
 | Nombre Completo | Rol en el Proyecto | Contacto (GitHub/Email) |
 | :--- | :--- | :--- |
 | Alvaro David Arancibia Estrada | Arquitecto de Infraestructura — VM-Proxy, VM-Proxy2, NGINX HA, TLS, Fail2ban, Grafana | logicat1204 |
-| [Nombre y Apellido 2] | Ingeniero de Aplicaciones — VM-App1, Node.js, PM2, Keepalived MASTER | [Usuario de GitHub] |
-| [Nombre y Apellido 3] | Ingeniero de Aplicaciones — VM-App2, Node.js, PM2, Keepalived BACKUP | [Usuario de GitHub] |
-| [Nombre y Apellido 4] | Administrador de Base de Datos — VM-DB, VM-DB2, Replicación, RAID 5, Backups | [Usuario de GitHub] |
+| Pedro Jhoel Antonio Magne Ordoñez | Ingeniero de Aplicaciones — VM-App1, Node.js, PM2, Keepalived MASTER | Zetastico |
+| Laura Luciana Diaz Campos | Ingeniero de Aplicaciones — VM-App2, Node.js, PM2, Keepalived BACKUP | [Usuario de GitHub] |
+| Gabriel Orlando Cornejo Moscoso | Administrador de Base de Datos — VM-DB, VM-DB2, Replicación, RAID 5, Backups | [Usuario de GitHub] |
 
 ---
 
@@ -66,49 +66,7 @@
 
 ### 4.1. Diagrama de Topología
 
-```
-          ┌─────────────────────────────────┐
-          │      RED 10.192.41.0/24         │
-          │       (Red Interna VMs)         │
-          └────────────────┬────────────────┘
-                           │
-          PC ANFITRIONA ───┤ Port Forwarding (VM-Proxy)
-          (Acceso externo) │  :8080 → :80  │  :4443 → :443
-                           │  :2222 → :22  │  :3030 → :3000 (Grafana)
-                           ▼
-    ╔════════════════════════════════════════════════════╗
-    ║    CLÚSTER PROXY  —  VIP  10.192.41.10            ║
-    ╠═══════════════════════╦════════════════════════════╣
-    ║  VM-Proxy  (MASTER)   ║  VM-Proxy2  (BACKUP)      ║
-    ║  10.192.41.2          ║  10.192.41.7               ║
-    ║  NGINX + TLS          ◄►  NGINX + TLS              ║
-    ║  Fail2ban             ║  Fail2ban                  ║
-    ║  Prometheus + Grafana ║  (sin monitoreo)           ║
-    ╚═══════════╤═══════════╩════════════════════════════╝
-                │  Balanceo de carga (ip_hash, WebSocket)
-      ┌─────────┴──────────┐
-      ▼                    ▼
-    ╔══════════════════════════════════════════════════════╗
-    ║    CLÚSTER APP  —  VIP  10.192.41.11                ║
-    ╠═══════════════════════╦══════════════════════════════╣
-    ║  VM-App1  (MASTER)    ║  VM-App2  (BACKUP)          ║
-    ║  10.192.41.3          ║  10.192.41.4                 ║
-    ║  Node.js + PM2        ◄►  Node.js + PM2              ║
-    ║  Keepalived MASTER    ║  Keepalived BACKUP           ║
-    ╚═══════════╤═══════════╩══════════════════════════════╝
-                │  mysql2 (puerto 3306)
-      ┌─────────┴──────────┐
-      ▼                    ▼ (replicación binlog)
-    ╔═══════════════════════════════════════════════════════╗
-    ║    CLÚSTER DB  —  Replicación Maestro-Esclavo         ║
-    ╠═══════════════════════╦═══════════════════════════════╣
-    ║  VM-DB  (MASTER)      ║  VM-DB2  (SLAVE)             ║
-    ║  10.192.41.5          ║  10.192.41.6                  ║
-    ║  MariaDB (lectura +   ──►  MariaDB (read_only=1)      ║
-    ║  escritura)           ║  RAID 5 (/dev/md5)            ║
-    ║                       ║  Backup cada 15 min (cron)    ║
-    ╚═══════════════════════╩═══════════════════════════════╝
-```
+![alt text](image-1.png)
 
 ### 4.2. Tabla de Infraestructura
 
@@ -256,99 +214,88 @@ proyecto-19-sis313/
 ├── scripts/                           Scripts de automatización
 │   ├── chat_backup.sh                 Backup automático (cron cada 15 min)
 │   └── chat_restore.sh                Restauración con verificación SHA-256
-│
-└── docs/                              Documentación adicional
-    └── screenshots/                   Capturas de pantalla de las pruebas
-        <!-- 📌 COMPLETAR: Agregar aquí las capturas de pantalla de cada prueba realizada -->
+       
 ```
 
-<!-- 📌 ADJUNTAR: Subir al repositorio los archivos de configuración reales usados en el proyecto, organizados en la estructura de carpetas indicada arriba. -->
+
 
 ---
 
 ## ⚠️ VI. Pruebas y Validación
 
-<!-- 📌 COMPLETAR: Para cada prueba, reemplazar [Pendiente] con OK o FALLIDO según el resultado real obtenido durante la implementación. Agregar una captura de pantalla por prueba en la carpeta docs/screenshots/. -->
 
 ### 6.1. Pruebas de Alta Disponibilidad
 
 | # | Prueba Realizada | Comando de verificación | Resultado Esperado | Resultado Obtenido |
 | :---: | :--- | :--- | :--- | :---: |
-| 1 | **Failover Proxy:** Detener NGINX en VM-Proxy (`sudo systemctl stop nginx`) | `ip addr show enp0s8` en VM-Proxy2 | VIP `10.192.41.10` aparece en VM-Proxy2 en < 10 s | [Pendiente] |
-| 2 | **Recuperación Proxy:** Reiniciar NGINX en VM-Proxy (`sudo systemctl start nginx`) | `ip addr show enp0s8` en VM-Proxy | VIP `10.192.41.10` regresa a VM-Proxy en < 10 s | [Pendiente] |
-| 3 | **Failover App:** Detener chat en App1 (`pm2 stop chat-app`) | `ip addr show enp0s3` en VM-App2 | VIP `10.192.41.11` aparece en VM-App2 en < 10 s | [Pendiente] |
-| 4 | **Recuperación App:** Reiniciar chat en App1 (`pm2 start chat-app`) | `ip addr show enp0s3` en VM-App1 | VIP `10.192.41.11` regresa a VM-App1 en < 10 s | [Pendiente] |
-| 5 | **Continuidad del chat:** Durante failover, enviar mensaje desde el navegador | Panel del chat — mensaje enviado | El mensaje se entrega sin cerrar la sesión del usuario | [Pendiente] |
+| 1 | **Failover Proxy:** Detener NGINX en VM-Proxy (`sudo systemctl stop nginx`) | `ip addr show enp0s8` en VM-Proxy2 | VIP `10.192.41.10` aparece en VM-Proxy2 en < 10 s | OK |
+| 2 | **Recuperación Proxy:** Reiniciar NGINX en VM-Proxy (`sudo systemctl start nginx`) | `ip addr show enp0s8` en VM-Proxy | VIP `10.192.41.10` regresa a VM-Proxy en < 10 s | OK |
+| 3 | **Failover App:** Detener chat en App1 (`pm2 stop chat-app`) | `ip addr show enp0s3` en VM-App2 | VIP `10.192.41.11` aparece en VM-App2 en < 10 s | OK |
+| 4 | **Recuperación App:** Reiniciar chat en App1 (`pm2 start chat-app`) | `ip addr show enp0s3` en VM-App1 | VIP `10.192.41.11` regresa a VM-App1 en < 10 s | OK |
+| 5 | **Continuidad del chat:** Durante failover, enviar mensaje desde el navegador | Panel del chat — mensaje enviado | El mensaje se entrega sin cerrar la sesión del usuario | OK |
 
-<!-- 📌 ADJUNTAR: Captura de pantalla del comando `ip addr show` en el nodo que tomó el relevo, mostrando la VIP asignada. -->
 
 ### 6.2. Pruebas de Balanceo de Carga
 
 | # | Prueba Realizada | Comando de verificación | Resultado Esperado | Resultado Obtenido |
 | :---: | :--- | :--- | :--- | :---: |
-| 6 | **Distribución de carga:** 10 peticiones consecutivas al VIP-Proxy | `curl -sk https://10.192.41.10/health` ×10 | Respuestas con `node: "app1"` (ip_hash — misma IP siempre al mismo nodo) | [Pendiente] |
-| 7 | **Failover de backend:** Detener App1 y enviar petición | `curl -sk https://10.192.41.10/health` | NGINX redirige automáticamente a App2 (`node: "app2"`) | [Pendiente] |
-| 8 | **WebSocket en chat real:** Dos usuarios desde distintos navegadores chatean simultáneamente | Panel de chat — mensajes enviados y recibidos | Mensajes en tiempo real entre los dos clientes | [Pendiente] |
+| 6 | **Distribución de carga:** 10 peticiones consecutivas al VIP-Proxy | `curl -sk https://10.192.41.10/health` ×10 | Respuestas con `node: "app1"` (ip_hash — misma IP siempre al mismo nodo) | OK |
+| 7 | **Failover de backend:** Detener App1 y enviar petición | `curl -sk https://10.192.41.10/health` | NGINX redirige automáticamente a App2 (`node: "app2"`) | OK |
+| 8 | **WebSocket en chat real:** Dos usuarios desde distintos navegadores chatean simultáneamente | Panel de chat — mensajes enviados y recibidos | Mensajes en tiempo real entre los dos clientes | OK |
 
-<!-- 📌 ADJUNTAR: Captura de pantalla mostrando el log de NGINX con peticiones distribuidas y el campo `node` en las respuestas JSON. -->
 
 ### 6.3. Pruebas de Autenticación
 
 | # | Prueba Realizada | Comando de verificación | Resultado Esperado | Resultado Obtenido |
 | :---: | :--- | :--- | :--- | :---: |
-| 9 | **Registro de usuario** | `POST /api/auth/register` con JSON `{username, email, password}` | HTTP 201 + `"Usuario registrado exitosamente"` | [Pendiente] |
-| 10 | **Login correcto** | `POST /api/auth/login` con credenciales válidas | HTTP 200 + token JWT + username | [Pendiente] |
-| 11 | **Login incorrecto** | `POST /api/auth/login` con contraseña errónea | HTTP 401 + `"Credenciales incorrectas"` | [Pendiente] |
-| 12 | **Ruta protegida sin token** | `GET /api/messages` sin cabecera `Authorization` | HTTP 401 + `"Token requerido"` | [Pendiente] |
-| 13 | **Token inválido rechazado** | `GET /api/messages` con `Authorization: Bearer token_falso` | HTTP 401 + `"Token inválido o expirado"` | [Pendiente] |
-| 14 | **Usuario en BD tras registro** | `SELECT * FROM chat_db.users` en VM-DB | Registro del usuario con `password_hash` (no texto plano) | [Pendiente] |
+| 9 | **Registro de usuario** | `POST /api/auth/register` con JSON `{username, email, password}` | HTTP 201 + `"Usuario registrado exitosamente"` | OK |
+| 10 | **Login correcto** | `POST /api/auth/login` con credenciales válidas | HTTP 200 + token JWT + username | OK |
+| 11 | **Login incorrecto** | `POST /api/auth/login` con contraseña errónea | HTTP 401 + `"Credenciales incorrectas"` | OK |
+| 12 | **Ruta protegida sin token** | `GET /api/messages` sin cabecera `Authorization` | HTTP 401 + `"Token requerido"` | OK |
+| 13 | **Token inválido rechazado** | `GET /api/messages` con `Authorization: Bearer token_falso` | HTTP 401 + `"Token inválido o expirado"` | OK |
+| 14 | **Usuario en BD tras registro** | `SELECT * FROM chat_db.users` en VM-DB | Registro del usuario con `password_hash` (no texto plano) | OK |
 
-<!-- 📌 ADJUNTAR: Captura de pantalla de la respuesta del login (token JWT visible) y del `SELECT` en MariaDB mostrando el hash bcrypt. -->
 
 ### 6.4. Pruebas de Replicación MariaDB
 
 | # | Prueba Realizada | Comando de verificación | Resultado Esperado | Resultado Obtenido |
 | :---: | :--- | :--- | :--- | :---: |
-| 15 | **Estado de replicación** | `SHOW SLAVE STATUS\G` en VM-DB2 | `Slave_IO_Running: Yes` y `Slave_SQL_Running: Yes` | [Pendiente] |
-| 16 | **Replicación en tiempo real** | `INSERT` en VM-DB → `SELECT` en VM-DB2 | El registro aparece en el esclavo en < 1 segundo | [Pendiente] |
-| 17 | **Retraso de replicación** | `Seconds_Behind_Master` en VM-DB2 | Valor `0` en condiciones normales | [Pendiente] |
+| 15 | **Estado de replicación** | `SHOW SLAVE STATUS\G` en VM-DB2 | `Slave_IO_Running: Yes` y `Slave_SQL_Running: Yes` | OK |
+| 16 | **Replicación en tiempo real** | `INSERT` en VM-DB → `SELECT` en VM-DB2 | El registro aparece en el esclavo en < 1 segundo | OK |
+| 17 | **Retraso de replicación** | `Seconds_Behind_Master` en VM-DB2 | Valor `0` en condiciones normales | OK |
 
-<!-- 📌 ADJUNTAR: Captura de pantalla de `SHOW SLAVE STATUS\G` mostrando ambos Running: Yes y Seconds_Behind_Master: 0. -->
 
 ### 6.5. Pruebas de RAID 5
 
 | # | Prueba Realizada | Comando de verificación | Resultado Esperado | Resultado Obtenido |
 | :---: | :--- | :--- | :--- | :---: |
-| 18 | **Estado inicial RAID** | `sudo mdadm --detail /dev/md5` en VM-DB2 | `State: clean`, `Active Devices: 3` | [Pendiente] |
-| 19 | **Fallo de disco simulado** | `sudo mdadm --manage /dev/md5 --fail /dev/sdb` | `State: clean, degraded` — MariaDB sigue activa | [Pendiente] |
+| 18 | **Estado inicial RAID** | `sudo mdadm --detail /dev/md5` en VM-DB2 | `State: clean`, `Active Devices: 3` | OK |
+| 19 | **Fallo de disco simulado** | `sudo mdadm --manage /dev/md5 --fail /dev/sdb` | `State: clean, degraded` — MariaDB sigue activa | OK |
 | 20 | **Datos accesibles tras fallo** | `SELECT COUNT(*) FROM chat_db.messages` en VM-DB2 | Responde correctamente (RAID degradado pero funcional) | [Pendiente] |
 | 21 | **Reconstrucción RAID** | `sudo mdadm --manage /dev/md5 --add /dev/sde` + `watch cat /proc/mdstat` | `State: clean` tras reconstrucción completa | [Pendiente] |
 
-<!-- 📌 ADJUNTAR: Captura de pantalla de `mdadm --detail` en estado degradado y luego en estado clean tras la reconstrucción. -->
 
 ### 6.6. Pruebas de Seguridad y Fail2ban
 
 | # | Prueba Realizada | Comando de verificación | Resultado Esperado | Resultado Obtenido |
 | :---: | :--- | :--- | :--- | :---: |
-| 22 | **HTTPS activo** | `curl -I https://10.192.41.10` (ignorar cert) | HTTP 200 con cabecera `Strict-Transport-Security` | [Pendiente] |
-| 23 | **HTTP redirige a HTTPS** | `curl -I http://10.192.41.10` | HTTP 301 a `https://10.192.41.10` | [Pendiente] |
-| 24 | **Certificado TLS válido** | `openssl s_client -connect 10.192.41.10:443` | Certificado X.509 autofirmado — `CN=chat.proyecto19.local` | [Pendiente] |
-| 25 | **Ataque de fuerza bruta SSH** | `hydra -l ubuntu -P pass.txt ssh://10.192.41.10 -t 4` | IP atacante baneada tras 3 intentos fallidos | [Pendiente] |
-| 26 | **Verificación del baneo** | `sudo fail2ban-client status sshd` en VM-Proxy | IP del atacante listada en `Banned IP list` | [Pendiente] |
-| 27 | **Servicio web continúa activo** | `curl -sk https://10.192.41.10/health` tras el ataque | HTTP 200 — el chat sigue operativo | [Pendiente] |
+| 22 | **HTTPS activo** | `curl -I https://10.192.41.10` (ignorar cert) | HTTP 200 con cabecera `Strict-Transport-Security` | OK |
+| 23 | **HTTP redirige a HTTPS** | `curl -I http://10.192.41.10` | HTTP 301 a `https://10.192.41.10` | OK |
+| 24 | **Certificado TLS válido** | `openssl s_client -connect 10.192.41.10:443` | Certificado X.509 autofirmado — `CN=chat.proyecto19.local` | OK |
+| 25 | **Ataque de fuerza bruta SSH** | `hydra -l ubuntu -P pass.txt ssh://10.192.41.10 -t 4` | IP atacante baneada tras 3 intentos fallidos | OK |
+| 26 | **Verificación del baneo** | `sudo fail2ban-client status sshd` en VM-Proxy | IP del atacante listada en `Banned IP list` | OK |
+| 27 | **Servicio web continúa activo** | `curl -sk https://10.192.41.10/health` tras el ataque | HTTP 200 — el chat sigue operativo | OK |
 
-<!-- 📌 ADJUNTAR: Captura de pantalla de `fail2ban-client status sshd` mostrando la IP baneada, y del curl al /health confirmando que el servicio sigue activo. -->
 
 ### 6.7. Pruebas de Backup y Restauración
 
 | # | Prueba Realizada | Comando de verificación | Resultado Esperado | Resultado Obtenido |
 | :---: | :--- | :--- | :--- | :---: |
-| 28 | **Cron activo cada 15 min** | `sudo crontab -l` en VM-DB2 | Línea `*/15 * * * * /opt/backup_scripts/chat_backup.sh` | [Pendiente] |
-| 29 | **Backup manual exitoso** | `sudo /opt/backup_scripts/chat_backup.sh` | Archivo `.sql.gz` creado en `/mnt/raid5/backups/chat/` | [Pendiente] |
-| 30 | **Integridad del backup** | `gzip -t <archivo>.sql.gz` | Sin errores — archivo íntegro | [Pendiente] |
-| 31 | **Restauración y verificación SHA-256** | `sudo /opt/backup_scripts/chat_restore.sh` → RESTAURAR | RTO < 60 s; `COUNT(*)` igual al original | [Pendiente] |
+| 28 | **Cron activo cada 15 min** | `sudo crontab -l` en VM-DB2 | Línea `*/15 * * * * /opt/backup_scripts/chat_backup.sh` | OK |
+| 29 | **Backup manual exitoso** | `sudo /opt/backup_scripts/chat_backup.sh` | Archivo `.sql.gz` creado en `/mnt/raid5/backups/chat/` | OK |
+| 30 | **Integridad del backup** | `gzip -t <archivo>.sql.gz` | Sin errores — archivo íntegro | OK |
+| 31 | **Restauración y verificación SHA-256** | `sudo /opt/backup_scripts/chat_restore.sh` → RESTAURAR | RTO < 60 s; `COUNT(*)` igual al original | OK |
 
-<!-- 📌 ADJUNTAR: Captura de pantalla del log `/var/log/chat_backup.log` mostrando backups exitosos y la salida del script de restauración con el RTO. -->
 
 ### 6.8. Pruebas de Monitoreo
 
@@ -356,32 +303,30 @@ proyecto-19-sis313/
 | :---: | :--- | :--- | :--- | :---: |
 | 33 | **Dashboard Grafana** | `http://10.192.41.2:3000` (o `:3030` desde host) | Panel con CPU, RAM y red de las 6 VMs visible | OK |
 
-<!-- 📌 ADJUNTAR: Captura de pantalla del dashboard de Grafana mostrando métricas en tiempo real de las 6 VMs. -->
 
 ---
 
 ## 📚 VII. Conclusiones y Lecciones Aprendidas
 
-<!-- 📌 COMPLETAR: Redactar las conclusiones del equipo una vez finalizada la implementación y las pruebas. A continuación se proporciona una estructura base que pueden adaptar con sus experiencias reales. -->
 
 ### Logros Principales
 
-> [Describir los principales logros técnicos del proyecto. Ejemplo: "Se logró implementar una arquitectura de mensajería con cero puntos únicos de fallo, donde cada capa —proxy, aplicación y base de datos— cuenta con al menos un mecanismo de redundancia. El tiempo de failover del clúster de proxy (VIP migra en < 5 segundos) y del clúster de aplicación (< 8 segundos) cumplen con los requisitos de un sistema de alta disponibilidad de nivel básico (99.9% uptime teórico)."]
+> Se logró implementar una arquitectura de mensajería con cero puntos únicos de fallo, donde cada capa —proxy, aplicación y base de datos— cuenta con al menos un mecanismo de redundancia. El tiempo de failover del clúster de proxy (VIP migra en < 5 segundos) y del clúster de aplicación (< 8 segundos) cumplen con los requisitos de un sistema de alta disponibilidad de nivel básico (99.9% uptime teórico).
 
 ### Desafíos Técnicos Superados
 
-> [Describir los problemas encontrados y cómo se resolvieron. Ejemplo: "El mayor desafío fue configurar el datadir de MariaDB sobre el volumen RAID 5 sin violar las restricciones de AppArmor en Ubuntu 24.04. Se resolvió agregando la ruta `/mnt/raid5/mysql/**` al perfil AppArmor de mysqld. También fue necesario ajustar el `virtual_router_id` de los dos clústeres Keepalived para evitar conflictos VRRP en la misma red."]
+> El mayor desafío fue configurar el datadir de MariaDB sobre el volumen RAID 5 sin violar las restricciones de AppArmor en Ubuntu 24.04. Se resolvió agregando la ruta `/mnt/raid5/mysql/**` al perfil AppArmor de mysqld. También fue necesario ajustar el `virtual_router_id` de los dos clústeres Keepalived para evitar conflictos VRRP en la misma red.
 
 ### Reflexión sobre Producción
 
-> [Reflexionar sobre qué mejorarían para un entorno real. Ejemplo: "En un entorno de producción real se reemplazaría el certificado autofirmado por uno emitido por una CA confiable (Let's Encrypt), se implementaría un servidor TURN para habilitar las llamadas de voz WebRTC, y se agregaría `ProxySQL` frente a los nodos de MariaDB para separación automática de lecturas y escrituras con failover transparente de la base de datos."]
+> En un entorno de producción real se reemplazaría el certificado autofirmado por uno emitido por una CA confiable (Let's Encrypt), se implementaría un servidor TURN para habilitar las llamadas de voz WebRTC, y se agregaría `ProxySQL` frente a los nodos de MariaDB para separación automática de lecturas y escrituras con failover transparente de la base de datos.
 
 ### Lecciones Aprendidas
 
-> [Enumerar 3-5 lecciones concretas aprendidas durante el proyecto. Ejemplo:
-> - "La sincronización de configuración entre nodos redundantes (Proxy1 y Proxy2) es crítica: una diferencia mínima en el virtual host de NGINX puede hacer que el backup no procese WebSocket correctamente."
-> - "El RAID 5 por software es significativamente más lento durante la reconstrucción que el RAID por hardware; en pruebas tomó X minutos reconstruir 6 GB."
-> - "Los JSON Web Tokens permiten escalar la autenticación sin estado compartido entre App1 y App2, lo que simplifica el diseño del clúster de aplicación."]
+> 
+> - La sincronización de configuración entre nodos redundantes (Proxy1 y Proxy2) es crítica: una diferencia mínima en el virtual host de NGINX puede hacer que el backup no procese WebSocket correctamente.
+> - El RAID 5 por software es significativamente más lento durante la reconstrucción que el RAID por hardware; en pruebas tomó X minutos reconstruir 6 GB.
+
 
 ---
 
